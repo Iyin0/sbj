@@ -1,0 +1,19 @@
+diff --git a/dist/chunks/vendor-base-ui-knphx7dts1vm1x37.js b/dist/chunks/vendor-base-ui-knphx7dts1vm1x37.js
+index 48afe91a9deb62c1e314b14edccfe8660dead40c..260e4fad2f270f06e7705851dd085fd4e1257018 100644
+--- a/dist/chunks/vendor-base-ui-knphx7dts1vm1x37.js
++++ b/dist/chunks/vendor-base-ui-knphx7dts1vm1x37.js
+@@ -4309,10 +4309,10 @@ const aR = (e) => ({
+       reset: T
+     };
+   }
+-}), cR = (e, t) => ({
+-  ...aR(e),
+-  options: [e, t]
+-}), lR = {
++}), cR = (e, t) => {
++  const n = aR(e);
++  return n.options = [e, t], n;
++}, lR = {
+   name: "hide",
+   async fn(e) {
+     const {

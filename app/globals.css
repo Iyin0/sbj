@@ -1,26 +1,229 @@
+@source "../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
+@import "@cloudflare/kumo/styles/tailwind";
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f3f0e9;
+  --paper-deep: #e9e3d9;
+  --ink: #181713;
+  --ink-soft: #343129;
+  --clay: #9c3f28;
+  --clay-dark: #74301f;
+  --sage: #6f7564;
+  --line: rgba(24, 23, 19, 0.16);
+  --muted: #746f65;
+  --cream: #fbfaf6;
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.25rem;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  scroll-padding-top: 5.5rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(circle at 88% 4%, rgba(156, 63, 40, 0.06), transparent 25rem),
+    var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), "Segoe UI", sans-serif;
+  min-height: 100%;
+}
+
+::selection {
+  background: var(--clay);
+  color: var(--cream);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.page-gutter {
+  padding-inline: clamp(1.25rem, 4vw, 4.5rem);
+}
+
+.editorial-grid {
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(1.25rem, 1fr)
+    [content-start] minmax(0, 88rem)
+    [content-end] minmax(1.25rem, 1fr)
+    [full-end];
+}
+
+.editorial-grid > * {
+  grid-column: content;
+}
+
+.editorial-grid > .full-bleed {
+  grid-column: full;
+}
+
+.hairline {
+  border-color: var(--line);
+}
+
+.eyebrow {
+  align-items: center;
+  color: var(--clay);
+  display: inline-flex;
+  font-size: 0.66rem;
+  font-weight: 700;
+  gap: 0.75rem;
+  letter-spacing: 0.24em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  background: currentColor;
+  content: "";
+  height: 1px;
+  width: 1.9rem;
+}
+
+.image-wash::after {
+  background:
+    linear-gradient(90deg, rgba(16, 15, 12, 0.74) 0%, rgba(16, 15, 12, 0.34) 45%, rgba(16, 15, 12, 0.05) 78%),
+    linear-gradient(0deg, rgba(16, 15, 12, 0.42), transparent 48%);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.soft-shadow {
+  box-shadow: 0 2rem 6rem rgba(43, 35, 27, 0.12);
+}
+
+[data-kumo-component="Select"][data-kumo-part="trigger"] {
+  width: 100%;
+}
+
+[data-base-ui-portal] > [role="presentation"][data-open] {
+  z-index: 80;
+}
+
+.residence-choice-grid > div {
+  display: grid;
+  gap: 1rem;
+}
+
+.residence-choice-grid [data-kumo-part="item-label"] > div > span {
+  color: inherit !important;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .residence-choice-grid > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.luxury-link {
+  display: inline-flex;
+  position: relative;
+}
+
+.luxury-link::after {
+  background: currentColor;
+  bottom: -0.25rem;
+  content: "";
+  height: 1px;
+  left: 0;
+  position: absolute;
+  transform: scaleX(0.28);
+  transform-origin: left;
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  width: 100%;
+}
+
+.luxury-link:hover::after,
+.luxury-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.field-dark label,
+.field-dark [data-slot="label"] {
+  color: rgba(251, 250, 246, 0.72) !important;
+}
+
+.field-dark input,
+.field-dark textarea,
+.field-dark button[role="combobox"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: var(--cream) !important;
+}
+
+.field-dark input::placeholder,
+.field-dark textarea::placeholder {
+  color: rgba(251, 250, 246, 0.44) !important;
+}
+
+.premium-calendar {
+  --rdp-accent-color: var(--clay);
+  --rdp-accent-background-color: rgba(156, 63, 40, 0.12);
+}
+
+.premium-calendar .rdp-root,
+.premium-calendar .rdp-months {
+  width: 100%;
+}
+
+.premium-calendar .rdp-months {
+  justify-content: center;
+  max-width: none;
+}
+
+.premium-calendar button[aria-selected="true"] {
+  color: white;
+}
+
+@media (max-width: 640px) {
+  .editorial-grid {
+    grid-template-columns:
+      [full-start] 1.25rem
+      [content-start] minmax(0, 1fr)
+      [content-end] 1.25rem
+      [full-end];
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
