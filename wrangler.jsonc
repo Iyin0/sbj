@@ -3,11 +3,31 @@
   "main": ".open-next/worker.js",
   "name": "staybyjordan",
   "compatibility_date": "2026-06-18",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "staybyjordan-prd",
+      "database_id": "c4e68ab0-f23f-46a0-b918-814851ea97de"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "PAYMENT_RECEIPTS",
+      "bucket_name": "staybyjordan-payment-receipts-prd"
+    }
+  ],
+
   "observability": {
     "enabled": true,
     "logs": {
@@ -18,6 +38,29 @@
     },
     "traces": {
       "enabled": false
+    }
+  },
+
+  "env": {
+    "stg": {
+      "workers_dev": true,
+
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "staybyjordan-stg",
+          "database_id": "8e954774-42d1-495d-b70e-d900b3b30667",
+          "remote": true
+        }
+      ],
+
+      "r2_buckets": [
+        {
+          "binding": "PAYMENT_RECEIPTS",
+          "bucket_name": "staybyjordan-payment-receipts-stg",
+          "remote": true
+        }
+      ]
     }
   }
 }

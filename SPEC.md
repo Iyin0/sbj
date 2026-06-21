@@ -16,7 +16,7 @@ WhatsApp URL: `https://wa.me/2349066875283`
 
 Mobile phone: `+2349066875283`
 
-Current status: approved frontend awaiting a frontend-baseline commit and test deployment, followed by backend implementation.
+Current status: approved frontend committed and deployed to Cloudflare Workers for testing. Production and staging D1/R2 resources are created and bound; backend implementation is the next phase.
 
 ## Original Product Request
 
@@ -37,6 +37,42 @@ The app should use Next.js and stay less complex/heavy. Google Sheets and Google
 - Cloudflare Workers deployment through `@opennextjs/cloudflare`
 - Wrangler for preview/deployment validation
 
+## Repository and Application Architecture
+
+Stay By Jordan is one full-stack Next.js application in one repository. It is not a monorepo, and the first release will not use a separate backend repository or independently deployed API service.
+
+The existing Next.js repository owns:
+
+- Public and admin frontend pages
+- Next.js Route Handlers and server-side functions
+- Shared Zod validation schemas and TypeScript types
+- D1 queries, transactions, and migrations
+- R2 upload authorization and receipt metadata
+- Reservation expiry processing
+- Admin authorization checks
+- Resend notification logic
+
+Planned server-side structure:
+
+```text
+app/api/
+  availability/
+  reservations/
+  payments/
+  admin/
+
+lib/server/
+  auth/
+  db/
+  notifications/
+  reservations/
+  uploads/
+
+migrations/
+```
+
+Cloudflare Workers/OpenNext remains the single application runtime and deployment target. A separate backend service should only be considered later if the product gains multiple independent clients, substantial background-processing requirements, or a service that cannot reasonably run in the Workers environment.
+
 Important scripts:
 
 - `pnpm dev`
@@ -55,22 +91,43 @@ Configured files:
 - `wrangler.jsonc`
 - `next.config.ts`
 
-Current Worker name: `stay-by-jordan`
+Production Worker name: `staybyjordan`
 
 Current compatibility date: `2026-06-18`
 
-Current bindings: static assets only through `ASSETS`.
+Current environments and resources:
+
+- Production Worker: `staybyjordan`
+- Staging Worker: `staybyjordan-stg`
+- Production D1: `staybyjordan-prd`
+- Staging D1: `staybyjordan-stg`
+- Production R2: `staybyjordan-payment-receipts-prd`
+- Staging R2: `staybyjordan-payment-receipts-stg`
+- Shared binding names used by application code: `DB` and `PAYMENT_RECEIPTS`
+- Static asset binding: `ASSETS`
+- Persistent Worker logs enabled; traces disabled
+
+Environment behavior:
+
+- Top-level Wrangler configuration is production.
+- `env.stg` is staging and deploys as `staybyjordan-stg`.
+- Normal local development uses local simulated D1/R2 resources.
+- Staging bindings use `remote: true`, allowing explicit staging development commands to access real staging data.
+- Production bindings must not use `remote: true`; local code should never connect to live production data by default.
+
+Created but not yet initialized:
+
+- D1 schema and migrations
+- Seed data
 
 Not yet configured:
 
-- Cloudflare D1
-- Cloudflare R2
 - Cron triggers
 - Resend secrets
+- Turnstile site and secret keys
 - WhatsApp Business messaging credentials
 - Cloudflare Access/Auth
 - Custom domain
-- Account ID/API token
 
 Generated Cloudflare/OpenNext artifacts are ignored:
 
@@ -296,6 +353,10 @@ Admin confirmation must be transactional: recheck every requested night, create 
 ## Notification Requirements
 
 - Use Resend for automated email.
+- A Resend account and API key may be created before purchasing the custom domain, but the default Resend test sender can only send to the Resend account owner's email.
+- Production guest/admin delivery requires a purchased domain and a verified Resend sending domain or subdomain.
+- Prefer a dedicated sending subdomain such as `send.<production-domain>` and a sender such as `Stay By Jordan <reservations@send.<production-domain>>`.
+- Store the Resend API key as an environment-specific Worker secret; never commit it or place it in `wrangler.jsonc`.
 - Admin notification destination email is configurable in the admin dashboard.
 - Admin WhatsApp number is configurable in the admin dashboard.
 - Guest email and WhatsApp number are collected with the reservation.
@@ -372,7 +433,7 @@ Important files:
 - `components/admin-reservation-table.tsx`: client-side Kumo admin table
 - `app/*/page.tsx`: route pages
 
-The app is currently static/prerendered. There are no server actions, D1 queries, R2 uploads, auth, or live notifications yet.
+The currently deployed app is still static/prerendered. The Cloudflare resources and bindings exist, but there are no server actions, Route Handlers, D1 queries, R2 uploads, auth checks, migrations, or live notifications yet.
 
 Current frontend-only behavior that must be replaced during backend work:
 
@@ -387,11 +448,15 @@ Current frontend-only behavior that must be replaced during backend work:
 
 ### Phase 0 — Frontend Baseline and Test Deployment
 
-1. Run the required frontend verification commands.
-2. The user commits the approved frontend and current documentation as the frontend baseline.
-3. Deploy that baseline to a `workers.dev` test URL.
-4. Perform desktop/mobile visual and interaction QA.
-5. Do not accept real reservations, transfers, or payment receipts from this test deployment.
+Completed:
+
+1. Approved frontend committed to `main`.
+2. Cloudflare Workers build and deploy commands corrected for OpenNext.
+3. Frontend deployed successfully to a `workers.dev` test URL.
+4. Runtime observability configured with persistent logs.
+5. Production and staging D1/R2 resources created and added to Wrangler configuration.
+
+The current deployment remains test-only. Do not accept real reservations, transfers, or payment receipts until backend storage, private uploads, admin protection, and live payment settings are implemented.
 
 ### Phase 1 — Product Alignment and Backend Foundation
 
@@ -400,11 +465,11 @@ Current frontend-only behavior that must be replaced during backend work:
 3. Add the refundable caution fee to reservation and payment summaries.
 4. Add a clear expired-window popup that allows late proof submission.
 5. Add the future policies-page shell or keep policy acceptance disabled until copy is ready.
-6. Create D1 development and production databases.
-7. Add migrations and seed the two current residence records.
-8. Create a private R2 bucket for payment receipts.
-9. Add environment bindings, generated Cloudflare types, and local development configuration.
-10. Add Cloudflare Access protection for `/admin`.
+6. Add D1 migrations and seed the two current residence records.
+7. Implement the shared server foundation under `lib/server/`.
+8. Implement Next.js Route Handlers under `app/api/`.
+9. Add environment-specific secrets and local development variables.
+10. Add Cloudflare Access protection for `/admin` after a custom domain is connected.
 11. Add Turnstile and server-side verification to public mutation endpoints.
 
 ### Phase 2 — Reservation Vertical Slice
@@ -450,33 +515,23 @@ Current frontend-only behavior that must be replaced during backend work:
 
 Use database constraints and transactions to prevent two confirmed reservations for the same residence/night. Temporary claims should be releasable without deleting reservation/payment history.
 
-## Frontend Test Deployment Setup
+## Current Deployment State
 
-The frontend can be deployed before D1, R2, Resend, or Access are configured, because the current build uses only the `ASSETS` binding.
+The frontend is deployed successfully through Cloudflare Workers Builds using:
 
-From `/home/iyin/work/sbj`:
+- Build command: `pnpm exec opennextjs-cloudflare build`
+- Production deploy command: `pnpm exec opennextjs-cloudflare deploy`
+- Staging/non-production deploy command: `pnpm exec opennextjs-cloudflare deploy --env stg`
+- Project path: `/`
 
-```bash
-pnpm install
-pnpm lint
-pnpm build
-pnpm opennextjs-cloudflare build
-pnpm wrangler deploy --dry-run
-pnpm wrangler login
-pnpm wrangler whoami
-pnpm deploy
-```
-
-On first use, Cloudflare may ask the account owner to register a `workers.dev` subdomain. The deployed Worker name is `stay-by-jordan`, so the initial test URL will be under that account's `workers.dev` domain.
-
-Frontend deployment cautions:
+Deployment cautions until the backend is complete:
 
 - Treat this deployment as a visual/interaction test, not a live booking system.
 - `/admin` is public until Cloudflare Access is configured.
 - Reservations and admin changes are browser-local and do not synchronize between users.
 - Placeholder bank details must not be used for real transfers.
 - Do not collect real payment proof until private R2 storage and server authorization exist.
-- A custom domain can be attached after the test deployment is accepted.
+- Production and staging resources must remain isolated even though the application code uses the same binding names.
 
 ## Verification Standard
 
@@ -486,7 +541,8 @@ After code changes, run:
 pnpm lint
 pnpm build
 pnpm opennextjs-cloudflare build
-pnpm wrangler deploy --dry-run
+pnpm wrangler deploy --dry-run --env=""
+pnpm wrangler deploy --dry-run --env stg
 ```
 
 If only Markdown/spec files change, a full build is not required, but checking affected files manually is still expected.
